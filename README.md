@@ -94,7 +94,7 @@ LOCAL_QWEN_MAX_NEW_TOKENS=4096 \
 python engine.py --filename ../test_data/meta_fiction.jsonl --output-filename ./project/story/output.jsonl --done-flag-file ./project/story/done.txt --model qwen4b --mode story
 ```
 
-****below ia from the original repo (my edit for the local model is the above instruction)****
+****below is from the original repo (my edit for the local model is the above instruction)****
 
 ```bash
 cd recursive
