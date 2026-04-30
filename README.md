@@ -1,4 +1,5 @@
 <h1 align="center">📝 Write<span style="color:green">HERE</span> Local clone</h1>
+<p align="center">Experimental clone to use a local LLM instead of API calls - not the original repo</p>
 <p align="center">Heterogeneous Recursive Planning based Open Writing Project</p>
 
 <p align="center">
