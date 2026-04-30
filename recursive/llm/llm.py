@@ -33,7 +33,6 @@ class OpenAIApiException(Exception):
         self.msg = msg
         self.error_code = error_code
 
-LOCAL_QWEN_MODEL_PATH = "/vol/research/TopDownVideo/models/qwen4b"
 _LOCAL_QWEN = {
     "model_path": None,
     "tokenizer": None,
@@ -100,7 +99,13 @@ class OpenAIApiProxy():
         self.verbose = verbose
 
     def _load_local_qwen(self):
-        model_path = os.getenv("LOCAL_QWEN_MODEL_PATH", LOCAL_QWEN_MODEL_PATH)
+        model_path = os.getenv("LOCAL_QWEN_MODEL_PATH", "").strip()
+        if not model_path:
+            raise RuntimeError(
+                "LOCAL_QWEN_MODEL_PATH is required for local Qwen inference. "
+                "Set it to your local Hugging Face checkpoint directory, for example "
+                "`export LOCAL_QWEN_MODEL_PATH=/path/to/your/qwen4b`."
+            )
         if _LOCAL_QWEN["model"] is not None and _LOCAL_QWEN["model_path"] == model_path:
             return _LOCAL_QWEN["tokenizer"], _LOCAL_QWEN["model"]
 

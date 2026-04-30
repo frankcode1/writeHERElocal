@@ -89,7 +89,7 @@ python engine.py --filename ../test_data/meta_fiction.jsonl --output-filename ./
 
 Example using local Qwen directly:
 ```bash
-LOCAL_QWEN_MODEL_PATH=/vol/research/TopDownVideo/models/qwen4b \
+LOCAL_QWEN_MODEL_PATH=/path/to/your/qwen4b \
 LOCAL_QWEN_DEVICE=cuda:0 \
 LOCAL_QWEN_ENABLE_THINKING=false \
 LOCAL_QWEN_MAX_INPUT_TOKENS=8192 \

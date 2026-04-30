@@ -89,6 +89,19 @@ def reload_task_storage():
 # Load existing tasks on startup
 reload_task_storage()
 
+def write_local_qwen_env(f):
+    """Pass local Qwen settings from the backend process into task subprocesses."""
+    for key in (
+        "LOCAL_QWEN_MODEL_PATH",
+        "LOCAL_QWEN_DEVICE",
+        "LOCAL_QWEN_ENABLE_THINKING",
+        "LOCAL_QWEN_MAX_INPUT_TOKENS",
+        "LOCAL_QWEN_MAX_NEW_TOKENS",
+    ):
+        value = os.getenv(key)
+        if value:
+            f.write(f"{key}={value}\n")
+
 def run_story_generation(task_id, prompt, model, api_keys):
     """
     Run the story generation script as a subprocess
@@ -126,11 +139,7 @@ def run_story_generation(task_id, prompt, model, api_keys):
             f.write(f"GEMINI={api_keys['gemini']}\n")
         if 'serpapi' in api_keys and api_keys['serpapi']:
             f.write(f"SERPAPI={api_keys['serpapi']}\n")
-        f.write("LOCAL_QWEN_MODEL_PATH=/vol/research/TopDownVideo/models/qwen4b\n")
-        f.write("LOCAL_QWEN_DEVICE=cuda:0\n")
-        f.write("LOCAL_QWEN_ENABLE_THINKING=false\n")
-        f.write("LOCAL_QWEN_MAX_INPUT_TOKENS=8192\n")
-        f.write("LOCAL_QWEN_MAX_NEW_TOKENS=4096\n")
+        write_local_qwen_env(f)
     
     # Create a script to run the engine with the appropriate environment
     script_path = os.path.join(task_dir, 'run.sh')
@@ -224,11 +233,7 @@ def run_report_generation(task_id, prompt, model, enable_search, search_engine, 
             f.write(f"GEMINI={api_keys['gemini']}\n")
         if 'serpapi' in api_keys and api_keys['serpapi']:
             f.write(f"SERPAPI={api_keys['serpapi']}\n")
-        f.write("LOCAL_QWEN_MODEL_PATH=/vol/research/TopDownVideo/models/qwen4b\n")
-        f.write("LOCAL_QWEN_DEVICE=cuda:0\n")
-        f.write("LOCAL_QWEN_ENABLE_THINKING=false\n")
-        f.write("LOCAL_QWEN_MAX_INPUT_TOKENS=8192\n")
-        f.write("LOCAL_QWEN_MAX_NEW_TOKENS=4096\n")
+        write_local_qwen_env(f)
     
     # Create a script to run the engine with the appropriate environment
     script_path = os.path.join(task_dir, 'run.sh')
