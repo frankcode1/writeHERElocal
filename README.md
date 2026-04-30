@@ -86,12 +86,17 @@ First make an input file for a story, a single line jsonl, like
 
 Example using local Qwen directly:
 ```bash
-LOCAL_QWEN_MODEL_PATH=/path/to/your/qwen4b \
-LOCAL_QWEN_DEVICE=cuda:0 \
-LOCAL_QWEN_ENABLE_THINKING=false \
-LOCAL_QWEN_MAX_INPUT_TOKENS=8192 \
-LOCAL_QWEN_MAX_NEW_TOKENS=4096 \
-python engine.py --filename ../test_data/meta_fiction.jsonl --output-filename ./project/story/output.jsonl --done-flag-file ./project/story/done.txt --model qwen4b --mode story
+python engine.py \
+  --filename ../test_data/meta_fiction.jsonl \
+  --output-filename ./project/story/output.jsonl \
+  --done-flag-file ./project/story/done.txt \
+  --model qwen4b \
+  --mode story \
+  --local-qwen-model-path /path/to/your/qwen4b \
+  --local-qwen-device cuda:0 \
+  --local-qwen-enable-thinking false \
+  --local-qwen-max-input-tokens 8192 \
+  --local-qwen-max-new-tokens 4096
 ```
 
 ****below is from the original repo (my edit for the local model is the above instruction)****

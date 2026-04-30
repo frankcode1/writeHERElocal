@@ -592,6 +592,11 @@ def define_args():
     parser.add_argument("--model", type=str, required=True)
     parser.add_argument("--length", type=int)
     parser.add_argument("--engine-backend", type=str)
+    parser.add_argument("--local-qwen-model-path", type=str, help="Local Hugging Face Qwen checkpoint directory")
+    parser.add_argument("--local-qwen-device", type=str, help="Device for local Qwen inference, e.g. cuda:0")
+    parser.add_argument("--local-qwen-enable-thinking", type=str, choices=["true", "false"], help="Enable Qwen3 thinking mode")
+    parser.add_argument("--local-qwen-max-input-tokens", type=int, help="Maximum input tokens for local Qwen")
+    parser.add_argument("--local-qwen-max-new-tokens", type=int, help="Maximum generated tokens for local Qwen")
     parser.add_argument("--nodes-json-file", type=str, help="Path to save nodes.json for real-time visualization")
     current_date = datetime.now().strftime("%b %d, %Y")  # Format: "Apr 1, 2025"
     parser.add_argument("--today-date", type=str, default=current_date, help="Today's date to use in prompts (default: current date)")
@@ -607,6 +612,19 @@ def define_args():
 if __name__ == "__main__":
     parser = define_args()
     args = parser.parse_args()
+
+    local_qwen_arg_map = {
+        "local_qwen_model_path": "LOCAL_QWEN_MODEL_PATH",
+        "local_qwen_device": "LOCAL_QWEN_DEVICE",
+        "local_qwen_enable_thinking": "LOCAL_QWEN_ENABLE_THINKING",
+        "local_qwen_max_input_tokens": "LOCAL_QWEN_MAX_INPUT_TOKENS",
+        "local_qwen_max_new_tokens": "LOCAL_QWEN_MAX_NEW_TOKENS",
+    }
+    for arg_name, env_name in local_qwen_arg_map.items():
+        value = getattr(args, arg_name, None)
+        if value is not None:
+            os.environ[env_name] = str(value)
+
     if args.mode == "story":
         story_writing(args.filename, args.output_filename,
                       args.start, args.end, args.done_flag_file, args.model,
