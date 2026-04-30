@@ -1,4 +1,4 @@
-<h1 align="center">📝 Write<span style="color:green">HERE</span></h1>
+<h1 align="center">📝 Write<span style="color:green">HERE</span> Local clone</h1>
 <p align="center">Heterogeneous Recursive Planning based Open Writing Project</p>
 
 <p align="center">
