@@ -77,15 +77,12 @@ nano recursive/api_key.env
 
 
 2. **Run the engine directly**:
+
+First make an input file for a story, a single line jsonl, like
 ```bash
-cd recursive
-python engine.py --filename <input_file> --output-filename <output_file> --done-flag-file <done_file> --model <model_name> --mode <story|report>
+{"id": "qwen-short-story", "ori": {"example_id": "qwen-short-story", "inputs": "Write a very 1500 word short story, about: A child's pet rock becomes a symbol of their own steadfastness as they navigate family trauma and ultimately provide unwavering support for their dying mother.", "subset": "stone"}}
 ```
 
-Example for generating a story:
-```bash
-python engine.py --filename ../test_data/meta_fiction.jsonl --output-filename ./project/story/output.jsonl --done-flag-file ./project/story/done.txt --model gpt-4o --mode story
-```
 
 Example using local Qwen directly:
 ```bash
@@ -96,6 +93,18 @@ LOCAL_QWEN_MAX_INPUT_TOKENS=8192 \
 LOCAL_QWEN_MAX_NEW_TOKENS=4096 \
 python engine.py --filename ../test_data/meta_fiction.jsonl --output-filename ./project/story/output.jsonl --done-flag-file ./project/story/done.txt --model qwen4b --mode story
 ```
+
+
+```bash
+cd recursive
+python engine.py --filename <input_file> --output-filename <output_file> --done-flag-file <done_file> --model <model_name> --mode <story|report>
+```
+
+Example for generating a story:
+```bash
+python engine.py --filename ../test_data/meta_fiction.jsonl --output-filename ./project/story/output.jsonl --done-flag-file ./project/story/done.txt --model gpt-4o --mode story
+```
+
 
 Example for generating a report:
 ```bash
