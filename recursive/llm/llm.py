@@ -155,10 +155,16 @@ class OpenAIApiProxy():
         with _LOCAL_QWEN_LOCK:
             tokenizer, qwen_model = self._load_local_qwen()
 
-            max_new_tokens = int(os.getenv("LOCAL_QWEN_MAX_NEW_TOKENS", kwargs.pop("max_new_tokens", 4096)))
+            explicit_max_new_tokens = None
+            if "max_new_tokens" in kwargs:
+                explicit_max_new_tokens = int(kwargs.pop("max_new_tokens"))
             if "max_tokens" in kwargs and kwargs["max_tokens"] != 8192:
-                max_new_tokens = int(kwargs.pop("max_tokens"))
-            max_input_tokens = int(os.getenv("LOCAL_QWEN_MAX_INPUT_TOKENS", 8192))
+                explicit_max_new_tokens = int(kwargs.pop("max_tokens"))
+            max_input_tokens = int(os.getenv("LOCAL_QWEN_MAX_INPUT_TOKENS", 32768))
+            model_context_tokens = int(os.getenv(
+                "LOCAL_QWEN_MAX_TOTAL_TOKENS",
+                getattr(qwen_model.config, "max_position_embeddings", max_input_tokens + 8192),
+            ))
 
             if hasattr(tokenizer, "apply_chat_template"):
                 chat_template_kwargs = {}
@@ -187,6 +193,17 @@ class OpenAIApiProxy():
                 )
             model_device = next(qwen_model.parameters()).device
             inputs = {key: value.to(model_device) for key, value in inputs.items()}
+            prompt_tokens = inputs["input_ids"].shape[-1]
+            if explicit_max_new_tokens is None:
+                max_new_tokens = max(1, model_context_tokens - prompt_tokens)
+            else:
+                max_new_tokens = explicit_max_new_tokens
+            if prompt_tokens + max_new_tokens > model_context_tokens:
+                max_new_tokens = max(1, model_context_tokens - prompt_tokens)
+                logger.warning(
+                    f"Local Qwen generation was capped to {max_new_tokens} new tokens "
+                    f"to stay within {model_context_tokens} total context tokens."
+                )
 
             generation_kwargs = {
                 "max_new_tokens": max_new_tokens,
@@ -337,6 +354,15 @@ class OpenAIApiProxy():
             cache_name = "OpenAIApiProxy.call"
             from copy import deepcopy
             call_args_dict = deepcopy(params_gpt)
+            if is_local_qwen:
+                call_args_dict["_local_qwen"] = {
+                    "model_path": os.getenv("LOCAL_QWEN_MODEL_PATH", ""),
+                    "device": os.getenv("LOCAL_QWEN_DEVICE", ""),
+                    "enable_thinking": os.getenv("LOCAL_QWEN_ENABLE_THINKING", "false"),
+                    "max_input_tokens": os.getenv("LOCAL_QWEN_MAX_INPUT_TOKENS", "32768"),
+                    "max_total_tokens": os.getenv("LOCAL_QWEN_MAX_TOTAL_TOKENS", "model_default"),
+                    "max_new_tokens": os.getenv("LOCAL_QWEN_MAX_NEW_TOKENS", "auto"),
+                }
             llm_cache = caches["llm"]
             if not overwrite_cache:
                 cache_result = llm_cache.get_cache(cache_name, call_args_dict)

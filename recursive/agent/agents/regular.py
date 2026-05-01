@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 from overrides import overrides
 import random
 import json
+import os
 from recursive.utils.register import Register
 from recursive.executor.actions.register import executor_register, tool_register
 from recursive.executor.actions import ActionExecutor
@@ -127,7 +128,34 @@ def extract_json_content(text):
     match = re.search(pattern, text, re.DOTALL)
     if match:
         return match.group(1).strip()
+    text = text.strip()
+    if text.startswith("{"):
+        return text
+    start = text.find("{")
+    end = text.rfind("}")
+    if start != -1 and end != -1 and end > start:
+        return text[start:end + 1].strip()
     return None
+
+
+def is_valid_goal_update(update_result):
+    update_result = update_result.strip()
+    if not update_result:
+        return False
+    normalized = update_result.strip("[]").strip().lower()
+    if normalized in (
+        "updated goal",
+        "goal_updating",
+        "goal update",
+        "no updates needed",
+        "no update needed",
+        "no updates",
+        "no update",
+        "none",
+        "n/a",
+    ):
+        return False
+    return True
 
 
 
@@ -173,7 +201,7 @@ class UpdateAtomPlanningAgent(Agent):
                         node, self, memory, "atom", *args, **kwargs
                     )
                     atom_llm_result["atom_original"] = atom_llm_result.pop("original")
-                    if atom_llm_result.get("update_result", ""):
+                    if is_valid_goal_update(atom_llm_result.get("update_result", "")):
                         ori_goal = node.task_info["goal"]
                         node.task_info["goal"] = atom_llm_result.get("update_result", "").replace("\n", "; ")
                         logger.info("Update goal from {} to {}".format(
@@ -220,7 +248,7 @@ class UpdateAtomPlanningAgent(Agent):
             return_result.update(atom_llm_result)
             # Use atom's thinking as candidate_think for recursive planning
             node.task_info["candidate_think"] = atom_llm_result["atom_think"]
-            if atom_llm_result.get("update_result", ""):
+            if is_valid_goal_update(atom_llm_result.get("update_result", "")):
                 node.task_info["goal"] = atom_llm_result.get("update_result", "").replace("\n", "; ")
         
             if atom_llm_result["atom_result"] == inner_kwargs["atom_result_flag"]:
@@ -230,7 +258,10 @@ class UpdateAtomPlanningAgent(Agent):
                 succ = False
                 retry_cnt = 0
                 plan_result = []
-                while not succ and retry_cnt < 10:
+                max_planning_retries = int(os.getenv("MAX_PLANNING_RETRIES", 3))
+                last_planning_error = None
+                last_planning_original = ""
+                while not succ and retry_cnt < max_planning_retries:
                     plan_llm_result = get_llm_output(
                         node, self, memory, "planning", retry_cnt > 0, *args, **kwargs
                     )
@@ -243,12 +274,27 @@ class UpdateAtomPlanningAgent(Agent):
                         try: 
                             plan_result = self.parse_result(plan_llm_result["plan_result"])
                         except Exception as e:
+                            last_planning_error = e
+                            last_planning_original = plan_llm_result["original"]
                             logger.error("Planning for {} failed, original is {}, retry {}".format(
                                 node, plan_llm_result["original"], retry_cnt
                             ))
                             retry_cnt += 1
                             continue 
                     succ = True
+
+                if not succ:
+                    hint = ""
+                    if last_planning_original and last_planning_original.count("{") > last_planning_original.count("}"):
+                        hint = (
+                            " The planning JSON appears truncated. Increase "
+                            "LOCAL_QWEN_MAX_NEW_TOKENS, for example to 4096 or 8192."
+                        )
+                    raise RuntimeError(
+                        "Planning failed after {} retries. Last parse error: {}.{}".format(
+                            max_planning_retries, last_planning_error, hint
+                        )
+                    )
                         
                 plan_llm_result["result"] = plan_result
                 return_result.update(plan_llm_result)

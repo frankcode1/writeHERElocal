@@ -26,7 +26,12 @@ __all__ = [
     "parse_hierarchy_tags_result"
 ]    
 
+def _normalize_llm_tag_markup(content):
+    return re.sub(r'(?m)^\s*[*_]{1,3}\s*((?:</?[\w:-]+>\s*)+)[*_]{1,3}\s*$', r'\1', content)
+
+
 def parse_tag_result(content, tag):
+    content = _normalize_llm_tag_markup(content)
     start = False 
     results = []
     for line in content.split("\n"):
@@ -47,6 +52,15 @@ def parse_tag_result(content, tag):
         for result in results:
             match_res.append(result)
         match_res = "\n".join(match_res)
+        if match_res == "":
+            empty_pair_pattern = r"<{0}>\s*</{0}>\s*(.*)$".format(re.escape(tag))
+            empty_pair_match = re.search(empty_pair_pattern, content, re.DOTALL)
+            if empty_pair_match:
+                return empty_pair_match.group(1).strip()
+            fallback_pattern = r"<{0}>\s*(.*)$".format(re.escape(tag))
+            fallback_match = re.search(fallback_pattern, content, re.DOTALL)
+            if fallback_match:
+                return fallback_match.group(1).strip()
         return match_res
     return ""
         

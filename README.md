@@ -95,8 +95,8 @@ python engine.py \
   --local-qwen-model-path /path/to/your/qwen4b \
   --local-qwen-device cuda:0 \
   --local-qwen-enable-thinking false \
-  --local-qwen-max-input-tokens 8192 \
-  --local-qwen-max-new-tokens 4096
+  --local-qwen-max-input-tokens 32768 \
+  --local-qwen-max-total-tokens 40960
 ```
 
 ****below is from the original repo (my edit for the local model is the above instruction)****

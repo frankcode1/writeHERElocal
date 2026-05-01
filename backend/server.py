@@ -96,6 +96,7 @@ def write_local_qwen_env(f):
         "LOCAL_QWEN_DEVICE",
         "LOCAL_QWEN_ENABLE_THINKING",
         "LOCAL_QWEN_MAX_INPUT_TOKENS",
+        "LOCAL_QWEN_MAX_TOTAL_TOKENS",
         "LOCAL_QWEN_MAX_NEW_TOKENS",
     ):
         value = os.getenv(key)

@@ -273,6 +273,10 @@ def story_writing(input_filename,
             "final_aggregate": {
                 "prompt_version": "StoryWritingReasonerFinalAggregate",
                 "mode": "llm",
+                "llm_args": {
+                    "model": global_use_model,
+                    "temperature": 0.3
+                },
                 "parse_arg_dict": {
                     "result": ["result"],
                 },
@@ -596,6 +600,7 @@ def define_args():
     parser.add_argument("--local-qwen-device", type=str, help="Device for local Qwen inference, e.g. cuda:0")
     parser.add_argument("--local-qwen-enable-thinking", type=str, choices=["true", "false"], help="Enable Qwen3 thinking mode")
     parser.add_argument("--local-qwen-max-input-tokens", type=int, help="Maximum input tokens for local Qwen")
+    parser.add_argument("--local-qwen-max-total-tokens", type=int, help="Maximum total input + generated tokens for local Qwen")
     parser.add_argument("--local-qwen-max-new-tokens", type=int, help="Maximum generated tokens for local Qwen")
     parser.add_argument("--nodes-json-file", type=str, help="Path to save nodes.json for real-time visualization")
     current_date = datetime.now().strftime("%b %d, %Y")  # Format: "Apr 1, 2025"
@@ -618,6 +623,7 @@ if __name__ == "__main__":
         "local_qwen_device": "LOCAL_QWEN_DEVICE",
         "local_qwen_enable_thinking": "LOCAL_QWEN_ENABLE_THINKING",
         "local_qwen_max_input_tokens": "LOCAL_QWEN_MAX_INPUT_TOKENS",
+        "local_qwen_max_total_tokens": "LOCAL_QWEN_MAX_TOTAL_TOKENS",
         "local_qwen_max_new_tokens": "LOCAL_QWEN_MAX_NEW_TOKENS",
     }
     for arg_name, env_name in local_qwen_arg_map.items():
