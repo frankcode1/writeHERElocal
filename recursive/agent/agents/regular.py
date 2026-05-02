@@ -158,6 +158,21 @@ def is_valid_goal_update(update_result):
     return True
 
 
+def extract_plain_article_fallback(content):
+    content = content.strip()
+    if not content:
+        return ""
+    content = re.sub(r"(?is)<think>.*?</think>", "", content).strip()
+    content = re.sub(r"(?is)^</think>\s*", "", content).strip()
+    content = re.sub(r"(?is)^```(?:\w+)?\s*", "", content).strip()
+    content = re.sub(r"(?is)\s*```$", "", content).strip()
+    if re.match(r"^\s*[{[]", content):
+        return ""
+    if re.search(r"<\s*(result|goal_updating|atomic_task_determination)\b", content, re.I):
+        return ""
+    return content
+
+
 
 @agent_register.register_module()
 class UpdateAtomPlanningAgent(Agent):
@@ -423,6 +438,13 @@ class SimpleExcutor(Agent):
                 llm_result = get_llm_output(
                     node, self, memory, "execute", retry_cnt > 0, *args, **kwargs
                 )
+                if (
+                    node.task_type_tag == "COMPOSITION"
+                    and llm_result["result"].strip() == ""
+                ):
+                    llm_result["result"] = extract_plain_article_fallback(
+                        llm_result.get("original", "")
+                    )
                 # 判定是否失败，如果result不为空则为成功
                 succ = (llm_result["result"].strip() != "")
                 if not succ:
